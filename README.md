@@ -114,3 +114,10 @@ npm install
 npm run build
 php artisan optimize:clear
 ```
+## Listado de productos (Tarea 02)
+
+El listado de `/productos` es un componente Livewire con paginación de 10 en 10, búsqueda por nombre o código, filtro por categoría y filtro por almacén. Todos los filtros se combinan entre sí y se guardan en la URL (`?q=`, `categoria=`, `almacen=`, `stock=`, `page=`), así que al recargar la página o compartir el enlace se mantiene el mismo resultado.
+
+### Filtro propio: rango de stock
+
+Agregué un desplegable que filtra los productos por su cantidad en stock en cuatro rangos: **Agotado** (0), **Bajo** (1 a 50), **Medio** (51 a 100) y **Alto** (más de 100). Si además se elige un almacén, el rango se revisa solo en ese almacén. Lo elegí porque en un almacén permite ver rápidamente qué productos se agotaron y deben reponerse, cuáles están por agotarse y cuáles tienen exceso de inventario. Cada rango se muestra con un color distinto (rojo, naranja, amarillo y verde). Técnicamente usa `whereHas('cantidad', ...)` con `whereBetween('stock', [mínimo, máximo])` sobre la tabla `stock__almacen`.
