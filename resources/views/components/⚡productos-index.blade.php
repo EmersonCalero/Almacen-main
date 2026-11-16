@@ -2,6 +2,7 @@
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Almacen;
@@ -13,11 +14,12 @@ new class extends Component
     public $buscar = '';
     public $categoria_id = '';
     public $almacen_id = '';
+    public $paginar = true;   // interruptor: true = paginado, false = sin paginar
 
-    // Al cambiar la búsqueda o un filtro, vuelve a la página 1
+    // Al cambiar la búsqueda, un filtro o el modo, vuelve a la página 1
     public function updating($propiedad)
     {
-        if (in_array($propiedad, ['buscar', 'categoria_id', 'almacen_id'])) {
+        if (in_array($propiedad, ['buscar', 'categoria_id', 'almacen_id', 'paginar'])) {
             $this->resetPage();
         }
     }
@@ -47,8 +49,31 @@ new class extends Component
             $consulta->where('stock__almacen.almacen_id', $this->almacen_id);
         }
 
+        $consulta->orderBy('productos.nombre');
+
+        // ===== MEDICIÓN: empieza el cronómetro =====
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $memoriaInicio = memory_get_usage();
+        $inicio = microtime(true);
+
+        $productos = $this->paginar
+            ? $consulta->paginate(10)   // solo 10
+            : $consulta->get();         // todos
+
+        $medicion = [
+            'modo'      => $this->paginar ? 'Paginado (10 por página)' : 'Sin paginar (todo)',
+            'filas'     => $productos->count(),
+            'tiempo'    => round((microtime(true) - $inicio) * 1000, 1),
+            'consultas' => count(DB::getQueryLog()),
+            'memoria'   => round((memory_get_usage() - $memoriaInicio) / 1024 / 1024, 2),
+        ];
+        DB::disableQueryLog();
+        // ===== fin de la medición =====
+
         return [
-            'productos'  => $consulta->orderBy('productos.nombre')->paginate(10),
+            'productos'  => $productos,
+            'medicion'   => $medicion,
             'categorias' => Categoria::orderBy('nombre')->get(),
             'almacenes'  => Almacen::orderBy('nombre')->get(),
         ];
@@ -57,7 +82,8 @@ new class extends Component
 ?>
 
 <div class="space-y-4">
-    <div class="flex flex-wrap gap-3">
+    {{-- Filtros --}}
+    <div class="flex flex-wrap gap-3 items-center">
         <input type="text"
                wire:model.live.debounce.400ms="buscar"
                placeholder="Buscar por nombre o código"
@@ -76,8 +102,23 @@ new class extends Component
                 <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
             @endforeach
         </select>
+
+        <label class="flex items-center gap-2 bg-white border rounded px-3 py-2">
+            <input type="checkbox" wire:model.live="paginar">
+            Paginar
+        </label>
     </div>
 
+    {{-- Cuadro de medición --}}
+    <div class="bg-yellow-100 border border-yellow-400 rounded p-3 text-sm">
+        <strong>Medición:</strong> {{ $medicion['modo'] }} ·
+        Filas: <strong>{{ $medicion['filas'] }}</strong> ·
+        Tiempo: <strong>{{ $medicion['tiempo'] }} ms</strong> ·
+        Consultas SQL: <strong>{{ $medicion['consultas'] }}</strong> ·
+        Memoria: <strong>{{ $medicion['memoria'] }} MB</strong>
+    </div>
+
+    {{-- Tabla --}}
     <table class="w-full text-left bg-white rounded">
         <thead>
             <tr class="bg-gray-200">
@@ -91,7 +132,6 @@ new class extends Component
         <tbody>
             @forelse ($productos as $producto)
                 @php
-                    // Si hay almacén elegido, muestra el stock de ESE almacén; si no, el del primero
                     $fila = $this->almacen_id
                         ? $producto->cantidad->firstWhere('almacen_id', $this->almacen_id)
                         : $producto->cantidad->first();
@@ -111,5 +151,8 @@ new class extends Component
         </tbody>
     </table>
 
-    {{ $productos->links() }}
+    {{-- Botones 1 2 3 solo si está paginado --}}
+    @if ($paginar)
+        {{ $productos->links() }}
+    @endif
 </div>
