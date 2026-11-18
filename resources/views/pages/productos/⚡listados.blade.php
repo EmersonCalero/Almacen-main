@@ -12,6 +12,12 @@ new class extends Component
 
 @extends('layouts.app')
 
+@section('titulo', 'Registro de Productos')
+
+@section('menu')
+    @include('layouts.menu')
+@endsection
+
 @section('contenido')
     @livewire('productos-index')
 @endsection

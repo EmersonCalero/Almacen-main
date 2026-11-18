@@ -10,3 +10,4 @@ use App\Livewire\Pages\Productos\Listado;
 //Route::resource('/productos', ProductosController::class);
 
 Route::livewire('/productos','pages::productos.listados')->name('productos.index');
+Route::livewire('/proveedores', 'pages::proveedores.listados')->name('proveedores.index');

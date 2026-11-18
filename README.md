@@ -130,3 +130,12 @@ El formulario de productos (`productos-form`) está junto al listado en `/produc
 | Precio `-5` | Se guardaba con precio negativo | "El precio debe ser mayor que cero." | `gt:0` |
 | Código `HER-0001` (repetido) | Error de base de datos (500) | "Ya existe un producto con ese código." | `unique:productos,codigo` (con `ignore($id)` al editar) |
 | Nombre de 150 letras | Error de base de datos: la columna mide 100 | "El nombre admite como máximo 100 caracteres." | `max:100` |
+### Formulario de proveedores
+
+En `/proveedores` está el listado de proveedores (búsqueda por nombre o RUC y paginación) junto al formulario `proveedores-form` para registrar y editar. Usa el mismo patrón que productos y las mismas reglas que `StoreProveedorRequest` (API en `/api/proveedores`).
+
+| Dato inválido | Antes | Ahora | Regla que lo impide |
+|---|---|---|---|
+| RUC `123` (incompleto) | No existía validación de proveedores | "El RUC debe tener exactamente 11 dígitos." | `digits:11` |
+| RUC `30100000001` | No existía validación de proveedores | "El RUC debe empezar con 10, 15, 17 o 20." | `regex:/^(10\|15\|17\|20)\d{9}$/` |
+| RUC repetido `20100000001` | Se habría guardado duplicado o roto la BD | "Ya existe un proveedor con ese RUC." | `unique:proveedores,ruc` (con `ignore($id)` al editar) |
