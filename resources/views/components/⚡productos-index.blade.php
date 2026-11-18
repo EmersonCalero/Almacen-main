@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Almacen;
+use Livewire\Attributes\On;
 
 new class extends Component
 {
@@ -34,6 +35,12 @@ new class extends Component
         if (in_array($propiedad, ['buscar', 'categoria_id', 'almacen_id', 'rango_stock', 'paginar'])) {
             $this->resetPage();
         }
+    }
+
+    // Cuando el formulario guarda, la tabla se vuelve a dibujar
+    #[On('producto-guardado')]
+    public function refrescar()
+    {
     }
 
     public function with(): array
@@ -166,6 +173,7 @@ new class extends Component
                 <th class="p-2">Categoría</th>
                 <th class="p-2">Stock</th>
                 <th class="p-2">Almacén</th>
+                <th class="p-2">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -195,10 +203,17 @@ new class extends Component
                         @if ($fila && $fila->stock == 0) (agotado) @endif
                     </td>
                     <td class="p-2">{{ $fila?->almacen?->nombre }}</td>
+                    <td class="p-2">
+                        <button type="button"
+                                wire:click="$dispatch('editar-producto', { id: {{ $producto->id }} })"
+                                class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700">
+                            Editar
+                        </button>
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="p-2 text-center">Sin datos.</td>
+                    <td colspan="6" class="p-2 text-center">Sin datos.</td>
                 </tr>
             @endforelse
         </tbody>

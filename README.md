@@ -121,3 +121,12 @@ El listado de `/productos` es un componente Livewire con paginación de 10 en 10
 ### Filtro propio: rango de stock
 
 Agregué un desplegable que filtra los productos por su cantidad en stock en cuatro rangos: **Agotado** (0), **Bajo** (1 a 50), **Medio** (51 a 100) y **Alto** (más de 100). Si además se elige un almacén, el rango se revisa solo en ese almacén. Lo elegí porque en un almacén permite ver rápidamente qué productos se agotaron y deben reponerse, cuáles están por agotarse y cuáles tienen exceso de inventario. Cada rango se muestra con un color distinto (rojo, naranja, amarillo y verde). Técnicamente usa `whereHas('cantidad', ...)` con `whereBetween('stock', [mínimo, máximo])` sobre la tabla `stock__almacen`.
+## Formularios con validación (Tarea 03)
+
+El formulario de productos (`productos-form`) está junto al listado en `/productos` y sirve para registrar y editar. Valida en tiempo real al salir de cada campo, muestra los mensajes en español y usa las mismas reglas que `StoreProductoRequest`, de modo que el formulario y el API rechazan los mismos datos.
+
+| Dato inválido | Antes | Ahora | Regla que lo impide |
+|---|---|---|---|
+| Precio `-5` | Se guardaba con precio negativo | "El precio debe ser mayor que cero." | `gt:0` |
+| Código `HER-0001` (repetido) | Error de base de datos (500) | "Ya existe un producto con ese código." | `unique:productos,codigo` (con `ignore($id)` al editar) |
+| Nombre de 150 letras | Error de base de datos: la columna mide 100 | "El nombre admite como máximo 100 caracteres." | `max:100` |
